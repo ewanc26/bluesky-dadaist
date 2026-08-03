@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 cmake_policy(SET CMP0077 NEW)
 
-project(bsky_dada
+project(bluesky_dadaist
     VERSION 0.1.0
     DESCRIPTION "A Dadaist oracle bot for Bluesky — word-level markov chain fed by the AT Protocol firehose"
     LANGUAGES C CXX
@@ -53,14 +53,14 @@ if(NOT UV_INCLUDE_DIR OR NOT UV_LIBRARY)
     message(FATAL_ERROR "libuv not found — install with: brew install libuv")
 endif()
 
-add_executable(bsky_dada
+add_executable(bluesky_dadaist
     src/markov.c
     src/firehose_collector.c
     src/dada_bot.c
     src/main.c
 )
-target_link_libraries(bsky_dada PRIVATE wolfram Threads::Threads ${UV_LIBRARY})
-target_include_directories(bsky_dada PRIVATE src ${METALBEAR_CJSON_SOURCE_DIR} ${UV_INCLUDE_DIR})
+target_link_libraries(bluesky_dadaist PRIVATE wolfram Threads::Threads ${UV_LIBRARY})
+target_include_directories(bluesky_dadaist PRIVATE src ${METALBEAR_CJSON_SOURCE_DIR} ${UV_INCLUDE_DIR})
 
 if(BSKY_DADA_BUILD_TESTS)
     enable_testing()

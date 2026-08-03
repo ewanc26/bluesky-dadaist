@@ -1,4 +1,4 @@
-# bsky-dada
+# bluesky-dadaist
 
 > **A Dadaist oracle bot for Bluesky.**  
 > It listens to the AT Protocol firehose, builds a word-level markov chain from
@@ -63,7 +63,7 @@ export DAFU_FIREHOSE=wss://bsky.network      # optional
 export DAFU_FORTUNE_INTERVAL=1800             # optional, default 1800s
 export DAFU_VERBOSE=1                        # optional, debug output
 
-./build/bsky_dada
+./build/bluesky_dadaist
 ```
 
 ## Environment variables

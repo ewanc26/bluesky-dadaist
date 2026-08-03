@@ -1,5 +1,5 @@
 /**
- * main.c — bsky-dada entry point.
+ * main.c — bluesky-dadaist entry point.
  *
  * Initialises the markov model and bot, then runs a libuv event loop that
  * drives a periodic notification-polling timer and a fortune-posting timer.
@@ -64,7 +64,7 @@ int main(int argc, char **argv)
     if (fi_env)
         fortune_interval = atoi(fi_env);
 
-    fprintf(stderr, "[main] bsky-dada — Dadaist Oracle bot\n");
+    fprintf(stderr, "[main] bluesky-dadaist — Dadaist Oracle bot\n");
     fprintf(stderr, "[main] firehose: %s\n", firehose);
     fprintf(stderr, "[main] service:  %s\n", service);
     fprintf(stderr, "[main] handle:   %s\n", handle);

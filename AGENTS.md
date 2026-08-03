@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Guidance for agents working on `bsky-dada`, a C23 Dadaist-oracle Bluesky bot
+Guidance for agents working on `bluesky-dadaist`, a C23 Dadaist-oracle Bluesky bot
 that builds a word-level markov chain from the live AT Protocol firehose and
 replies to mentions with collaged "wisdom."
 
@@ -66,13 +66,13 @@ cmake --build build
 ctest --test-dir build --output-on-failure
 ```
 
-The markov chain tests are fully offline. Running `bsky_dada` requires live
+The markov chain tests are fully offline. Running `bluesky_dadaist` requires live
 Bluesky credentials and a reachable firehose.
 
 ## Runtime
 
 ```bash
-DAFU_HANDLE=oracle.bsky.social DAFU_PASSWORD=... ./build/bsky_dada
+DAFU_HANDLE=oracle.bsky.social DAFU_PASSWORD=... ./build/bluesky_dadaist
 ```
 
 The bot starts both the firehose collector and the notification-polling loop
