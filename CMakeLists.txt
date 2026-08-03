@@ -46,14 +46,21 @@ endif()
 
 find_package(Threads REQUIRED)
 
+find_path(UV_INCLUDE_DIR uv.h)
+find_library(UV_LIBRARY uv)
+
+if(NOT UV_INCLUDE_DIR OR NOT UV_LIBRARY)
+    message(FATAL_ERROR "libuv not found — install with: brew install libuv")
+endif()
+
 add_executable(bsky_dada
     src/markov.c
     src/firehose_collector.c
     src/dada_bot.c
     src/main.c
 )
-target_link_libraries(bsky_dada PRIVATE wolfram Threads::Threads)
-target_include_directories(bsky_dada PRIVATE src ${METALBEAR_CJSON_SOURCE_DIR})
+target_link_libraries(bsky_dada PRIVATE wolfram Threads::Threads ${UV_LIBRARY})
+target_include_directories(bsky_dada PRIVATE src ${METALBEAR_CJSON_SOURCE_DIR} ${UV_INCLUDE_DIR})
 
 if(BSKY_DADA_BUILD_TESTS)
     enable_testing()

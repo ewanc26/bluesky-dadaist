@@ -15,8 +15,9 @@ replies to mentions with collaged "wisdom."
 - `src/dada_bot.{c,h}` — bot loop: polls `app.bsky.notification.listNotifications`
   for unread mentions, generates a reply from the markov model, and posts it
   via `wf_agent_reply`. Also posts standalone "fortunes" on a timer.
-- `src/main.c` — entry point; reads credentials from env, spawns the firehose
-  and bot threads, installs signal handlers, joins on shutdown.
+- `src/main.c` — entry point; reads credentials from env, starts the libuv
+  event loop with two timers (tick/fortune) and a SIGINT/SIGTERM handler.
+  Spawns the firehose collector thread and joins on shutdown.
 - `test/test.h` — tiny assert-and-report harness (mirrors Wolfram's).
 - `test/test_markov.c` — offline tests for the markov chain.
 
@@ -37,17 +38,25 @@ replies to mentions with collaged "wisdom."
 
 ## Threading model
 
-Two POSIX threads share a single `markov_model`:
+The main thread runs a libuv event loop (`uv_default_loop`). A single side
+POSIX thread runs the blocking firehose subscription. Two `uv_timer_t` handles
+on the main loop drive the bot logic:
 
-1. **Firehose thread** — runs `wf_subscribe_start` (blocking WebSocket loop).
-   Extracts post text and writes to the markov model via `markov_add_text`.
-2. **Bot thread** — runs `wf_agent_*` calls (HTTP via the agent's own curl
-   handle). Generates text and replies via `markov_generate`.
+1. **Firehose thread** — `pthread_create` runs `firehose_collector_run`, which
+   blocks inside `wf_subscribe_start`. Extracts post text from CAR/CBOR commit
+   data and writes to the markov model via `markov_add_text`.
 
-The markov model's internal mutex serializes all access. The two threads use
-**different** `wf_xrpc_client` / `wf_agent` instances (the firehose uses the
-subscription's internal client; the bot uses its agent), so there is no shared
-curl handle across threads.
+2. **Bot (main loop)** — two libuv timers:
+   - `tick_timer` (every 15 s): polls notifications, replies to unread mentions.
+   - `fortune_timer` (every `fortune_interval` s): posts standalone fortunes.
+
+The markov model's internal mutex serializes all access between the firehose
+writer thread and the bot's timer callbacks. The firehose uses the
+subscription's internal curl handle; the bot uses its `wf_agent`'s curl handle,
+so no curl handle is shared across threads.
+
+SIGINT and SIGTERM are caught via `uv_signal_t` handles that call `uv_stop`,
+draining the timers and the firehose thread cleanly.
 
 ## Build & test
 
@@ -56,6 +65,9 @@ cmake -S . -B build
 cmake --build build
 ctest --test-dir build --output-on-failure
 ```
+
+The markov chain tests are fully offline. Running `bsky_dada` requires live
+Bluesky credentials and a reachable firehose.
 
 ## Runtime
 

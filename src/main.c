@@ -1,40 +1,40 @@
 /**
  * main.c — bsky-dada entry point.
  *
- * Reads credentials from environment variables, spawns the firehose
- * collector and oracle bot threads, installs signal handlers for clean
- * shutdown, and joins on exit.
+ * Initialises the markov model and bot, then runs a libuv event loop that
+ * drives a periodic notification-polling timer and a fortune-posting timer.
+ * The firehose collector runs in a side thread.
  */
 
-#include "firehose_collector.h"
 #include "dada_bot.h"
+#include "firehose_collector.h"
 #include "markov.h"
 
-#include <wolfram/xrpc.h>
+#include <uv.h>
 
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
+#include <time.h>
 
 #define DEFAULT_FIREHOSE "wss://bsky.network"
 #define DEFAULT_SERVICE  "https://bsky.social"
 #define DEFAULT_TABLE    65536
+#define DEFAULT_FORTUNE  1800
 
-static volatile sig_atomic_t g_terminated = 0;
-
-static void handle_signal(int sig)
-{
-    (void)sig;
-    g_terminated = 1;
-}
-
-static const char *env(const char *key, const char *fallback)
+static const char *env_or(const char *key, const char *fallback)
 {
     const char *v = getenv(key);
     return v ? v : fallback;
+}
+
+static void on_signal(uv_signal_t *w, int sig)
+{
+    (void)sig;
+    fprintf(stderr, "[main] signal received, shutting down...\n");
+    uv_stop(uv_handle_get_loop((uv_handle_t *)w));
 }
 
 int main(int argc, char **argv)
@@ -47,19 +47,19 @@ int main(int argc, char **argv)
 
     if (!handle || !password) {
         fprintf(stderr,
-                "usage: set DAFU_HANDLE, DAFU_PASSWORD\n"
+                "usage: set DAFU_HANDLE and DAFU_PASSWORD\n"
                 "optional: DAFU_SERVICE (default %s)\n"
                 "          DAFU_FIREHOSE (default %s)\n"
-                "          DAFU_FORTUNE_INTERVAL (default 1800)\n"
+                "          DAFU_FORTUNE_INTERVAL (default %d)\n"
                 "          DAFU_VERBOSE=1 for debug output\n",
-                DEFAULT_SERVICE, DEFAULT_FIREHOSE);
+                DEFAULT_SERVICE, DEFAULT_FIREHOSE, DEFAULT_FORTUNE);
         return 1;
     }
 
-    const char *service     = env("DAFU_SERVICE", DEFAULT_SERVICE);
-    const char *firehose    = env("DAFU_FIREHOSE", DEFAULT_FIREHOSE);
+    const char *service     = env_or("DAFU_SERVICE", DEFAULT_SERVICE);
+    const char *firehose    = env_or("DAFU_FIREHOSE", DEFAULT_FIREHOSE);
     int verbose             = getenv("DAFU_VERBOSE") ? 1 : 0;
-    int fortune_interval    = 1800; /* 30 minutes */
+    int fortune_interval    = DEFAULT_FORTUNE;
     const char *fi_env       = getenv("DAFU_FORTUNE_INTERVAL");
     if (fi_env)
         fortune_interval = atoi(fi_env);
@@ -75,9 +75,9 @@ int main(int argc, char **argv)
         fprintf(stderr, "[main] failed to initialise markov model\n");
         return 1;
     }
-    srandom((unsigned int)time(NULL));
+    srandom((unsigned)time(NULL));
 
-    /* ---- firehose collector ---- */
+    /* ---- firehose collector (side thread) ---- */
     firehose_collector fc = {0};
     fc.model   = &model;
     fc.service = firehose;
@@ -91,7 +91,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    /* ---- oracle bot ---- */
+    /* ---- bot login ---- */
     dada_bot bot = {0};
     bot.model            = &model;
     bot.handle           = strdup(handle);
@@ -99,45 +99,67 @@ int main(int argc, char **argv)
     bot.service          = strdup(service);
     bot.verbose          = verbose;
     bot.fortune_interval = fortune_interval;
-    bot.running           = 1;
 
-    pthread_t bot_tid;
-    if (pthread_create(&bot_tid, NULL, dada_bot_run, &bot) != 0) {
-        fprintf(stderr, "[main] failed to create bot thread\n");
+    wf_status st = dada_bot_login(&bot);
+    if (st != WF_OK) {
+        fprintf(stderr, "[main] bot login failed\n");
         firehose_collector_stop(&fc);
         pthread_join(firehose_tid, NULL);
-        free(bot.handle);
-        free(bot.password);
-        free(bot.service);
+        free(bot.handle); free(bot.password); free(bot.service);
         markov_free(&model);
         return 1;
     }
 
-    /* ---- signal handler for graceful shutdown ---- */
-    struct sigaction sa;
-    memset(&sa, 0, sizeof(sa));
-    sa.sa_handler = handle_signal;
-    sigemptyset(&sa.sa_mask);
-    sa.sa_flags = 0;
-    sigaction(SIGINT, &sa, NULL);
-    sigaction(SIGTERM, &sa, NULL);
+    /* ---- libuv event loop ---- */
+    uv_loop_t *loop = uv_default_loop();
 
-    fprintf(stderr, "[main] running — press Ctrl-C to stop\n");
+    uv_timer_t tick_timer;
+    tick_timer.data = &bot;
+    uv_timer_init(loop, &tick_timer);
+    uv_timer_start(&tick_timer, dada_bot_on_tick, 0,
+                   NOTIF_POLL_SECONDS * 1000);
 
-    while (!g_terminated)
-        sleep(1);
+    uv_timer_t fortune_timer;
+    fortune_timer.data = &bot;
+    uv_timer_init(loop, &fortune_timer);
+    if (fortune_interval > 0) {
+        uv_timer_start(&fortune_timer, dada_bot_on_fortune,
+                       fortune_interval * 1000,
+                       fortune_interval * 1000);
+    }
 
-    fprintf(stderr, "[main] shutting down...\n");
+    uv_signal_t sigint_watcher;
+    uv_signal_t sigterm_watcher;
+    uv_signal_init(loop, &sigint_watcher);
+    uv_signal_init(loop, &sigterm_watcher);
+    uv_signal_start(&sigint_watcher, on_signal, SIGINT);
+    uv_signal_start(&sigterm_watcher, on_signal, SIGTERM);
+
+    fprintf(stderr, "[main] running — Ctrl-C to stop\n");
+    uv_run(loop, UV_RUN_DEFAULT);
+
+    /* ---- shutdown ---- */
+    fprintf(stderr, "[main] stopping firehose collector\n");
     firehose_collector_stop(&fc);
-    dada_bot_stop(&bot);
-
     pthread_join(firehose_tid, NULL);
-    pthread_join(bot_tid, NULL);
+
+    fprintf(stderr, "[main] logging out bot\n");
+    dada_bot_logout(&bot);
+
+    uv_timer_stop(&tick_timer);
+    uv_timer_stop(&fortune_timer);
+    uv_close((uv_handle_t *)&tick_timer, NULL);
+    uv_close((uv_handle_t *)&fortune_timer, NULL);
+    uv_close((uv_handle_t *)&sigint_watcher, NULL);
+    uv_close((uv_handle_t *)&sigterm_watcher, NULL);
+    uv_run(loop, UV_RUN_DEFAULT);
 
     free(bot.handle);
     free(bot.password);
     free(bot.service);
     markov_free(&model);
+
+    uv_loop_close(loop);
 
     fprintf(stderr, "[main] bye\n");
     return 0;
