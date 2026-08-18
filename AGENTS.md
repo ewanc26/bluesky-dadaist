@@ -30,8 +30,7 @@ replies to mentions with collaged "wisdom."
   calling the SDK, and `/* */` block comments where they aid understanding.
 - **Explicit ownership.** Every heap-allocated output from the wolfram SDK is
   freed by its documented `_free` function. The markov model owns its strings.
-- **No AI co-authors.** Do not add `Co-authored-by:` trailers crediting AI
-  agents to commits.
+- **Honest attribution.** Commits may carry a `Co-authored-by:` trailer crediting an AI agent when it materially contributed — just make sure the trailer reflects reality.
 - **Comments are encouraged** next to public API declarations (ownership
   rules, lifetime, thread-safety) and non-obvious protocol details. Do not add
   noise comments that merely restate the code.
