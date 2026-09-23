@@ -20,28 +20,26 @@ endif()
 
 option(BSKY_DADA_BUILD_TESTS "Build unit tests" ON)
 
-# Locate the Wolfram SDK source tree.
-set(WOLFRAM_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../wolfram" CACHE PATH
-    "Path to the Wolfram AT Protocol SDK source tree")
-
-if(NOT EXISTS "${WOLFRAM_SOURCE_DIR}/CMakeLists.txt")
-    message(FATAL_ERROR
-        "WOLFRAM_SOURCE_DIR does not point to a Wolfram checkout at "
-        "'${WOLFRAM_SOURCE_DIR}'. Set -DWOLFRAM_SOURCE_DIR=/path/to/wolfram")
-endif()
-
 # Build only the library — no examples, tests, or C++ wrappers.
 set(WOLFRAM_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(WOLFRAM_BUILD_TESTS   OFF CACHE BOOL "" FORCE)
 set(WOLFRAM_BUILD_CPP     OFF CACHE BOOL "" FORCE)
 set(WOLFRAM_BUILD_SERVER  OFF CACHE BOOL "" FORCE)
 
-add_subdirectory("${WOLFRAM_SOURCE_DIR}" "${CMAKE_BINARY_DIR}/wolfram")
+# Wolfram is fetched pinned to a released tag, matching the other wolfram
+# consumers in this account (atperson, MetalBear, keepsake).
+include(FetchContent)
+FetchContent_Declare(
+  wolfram
+  GIT_REPOSITORY https://github.com/ewanc26/wolfram.git
+  GIT_TAG v0.22.0
+  GIT_SHALLOW TRUE)
+FetchContent_MakeAvailable(wolfram)
 
 # Resolve cjson source dir for #include <cJSON.h>
 get_target_property(METALBEAR_CJSON_SOURCE_DIR cjson SOURCE_DIR)
 if(NOT METALBEAR_CJSON_SOURCE_DIR)
-    set(METALBEAR_CJSON_SOURCE_DIR "${WOLFRAM_SOURCE_DIR}/third_party/cjson")
+    set(METALBEAR_CJSON_SOURCE_DIR "${wolfram_SOURCE_DIR}/third_party/cjson")
 endif()
 
 find_package(Threads REQUIRED)
