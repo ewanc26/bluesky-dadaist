@@ -43,7 +43,7 @@ no curl handle is shared across threads.
 - CMake ≥ 3.20
 - libuv ≥ 1.0 (`brew install libuv`)
 - The [Wolfram SDK](https://github.com/ewanc26/wolfram) — fetched
-  automatically by CMake, pinned to the released `v0.22.0` tag
+  automatically by CMake, pinned to the released `v0.41.0` tag
 - A Bluesky account with an app password
 
 ## Build

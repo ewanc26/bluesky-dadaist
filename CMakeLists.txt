@@ -32,7 +32,7 @@ include(FetchContent)
 FetchContent_Declare(
   wolfram
   GIT_REPOSITORY https://github.com/ewanc26/wolfram.git
-  GIT_TAG v0.22.0
+  GIT_TAG v0.41.0
   GIT_SHALLOW TRUE)
 FetchContent_MakeAvailable(wolfram)
 
