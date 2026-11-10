@@ -35,7 +35,7 @@ jobs:
 
       - name: Install dependencies (macOS)
         if: runner.os == 'macOS'
-        run: brew install libuv zstd libsecp256k1
+        run: brew install libuv zstd secp256k1
 
       - name: Configure
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
