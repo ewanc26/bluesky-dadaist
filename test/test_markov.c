@@ -5,6 +5,11 @@
  * Run with: ctest --test-dir build
  */
 
+/* glibc hides srandom from strict C23; Apple's libc declares it without any
+ * macro. Mirror markov.c's feature requests so this builds on both. */
+#define _POSIX_C_SOURCE 200809L
+#define _DEFAULT_SOURCE
+
 #include "test.h"
 #include "markov.h"
 

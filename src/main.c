@@ -6,6 +6,11 @@
  * The firehose collector runs in a side thread.
  */
 
+/* glibc hides srandom from strict C23 until _DEFAULT_SOURCE is requested;
+ * Apple's libc declares it without any macro. Mirror markov.c. */
+#define _POSIX_C_SOURCE 200809L
+#define _DEFAULT_SOURCE
+
 #include "dada_bot.h"
 #include "firehose_collector.h"
 #include "markov.h"
