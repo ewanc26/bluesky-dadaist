@@ -12,6 +12,11 @@
  *   4. Feeds the text into the markov model via markov_add_text.
  */
 
+/* glibc hides srandom from strict C23 until _DEFAULT_SOURCE is requested;
+ * Apple's libc declares it without any macro. Mirror markov.c. */
+#define _POSIX_C_SOURCE 200809L
+#define _DEFAULT_SOURCE
+
 #include "firehose_collector.h"
 
 #include <wolfram/repo/car.h>
