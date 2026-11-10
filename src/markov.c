@@ -4,10 +4,11 @@
  * See markov.h for the API contract.
  */
 
-/* glibc hides strtok_r and random from strict C23 until a feature macro asks
- * for them; Apple's libc declares both regardless. Request the POSIX 2008 API
- * so both Linux and macOS builds compile. */
+/* glibc hides strtok_r from strict C23 until a POSIX feature macro asks for
+ * it, and random() until _DEFAULT_SOURCE; Apple's libc declares both
+ * regardless. Request both so Linux and macOS builds compile. */
 #define _POSIX_C_SOURCE 200809L
+#define _DEFAULT_SOURCE
 
 #include "markov.h"
 
