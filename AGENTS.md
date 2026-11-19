@@ -4,7 +4,7 @@ Guidance for AI coding agents working in **bluesky-dadaist**.
 
 ## Project overview
 
-
+A Dadaist oracle bot for Bluesky.
 
 - Language: C
 - Default branch: main

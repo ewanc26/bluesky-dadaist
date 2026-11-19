@@ -1,3 +1,10 @@
+<p align="center">
+  <a href="https://github.com/ewanc26/bluesky-dadaist/actions/workflows/ci.yml"><img src="https://github.com/ewanc26/bluesky-dadaist/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/ewanc26/bluesky-dadaist/releases/latest"><img src="https://img.shields.io/github/v/release/ewanc26/bluesky-dadaist?sort=semver" alt="Latest release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/ewanc26/bluesky-dadaist?label=licence" alt="Licence"></a>
+  <a href="https://github.com/sponsors/ewanc26"><img src="https://img.shields.io/github/sponsors/ewanc26?logo=githubsponsors&logoColor=white&label=sponsors" alt="Sponsor"></a>
+</p>
+
 # bluesky-dadaist
 
 > **A Dadaist oracle bot for Bluesky.**  
@@ -77,6 +84,8 @@ export DAFU_VERBOSE=1                        # optional, debug output
 | `DAFU_FORTUNE_INTERVAL`| no     | `1800`               | Seconds between standalone fortunes  |
 | `DAFU_VERBOSE`       | no       | unset                | Set to `1` for per-event debug output|
 
-## License
-
+## Licence
 AGPL-3.0. See [LICENSE](LICENSE).
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the workflow and the checks required before opening a pull request.
