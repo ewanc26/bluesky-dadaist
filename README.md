@@ -1,5 +1,6 @@
 <p align="center">
   <a href="https://github.com/ewanc26/bluesky-dadaist/actions/workflows/ci.yml"><img src="https://github.com/ewanc26/bluesky-dadaist/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/ewanc26/bluesky-dadaist/releases/latest"><img src="https://img.shields.io/github/v/release/ewanc26/bluesky-dadaist?sort=semver" alt="Latest release"></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/ewanc26/bluesky-dadaist?label=licence" alt="Licence"></a>
   <a href="https://github.com/sponsors/ewanc26"><img src="https://img.shields.io/github/sponsors/ewanc26?logo=githubsponsors&logoColor=white&label=sponsors" alt="Sponsor"></a>
 </p>
@@ -47,8 +48,7 @@ no curl handle is shared across threads.
 
 - A C23 compiler (gcc ≥ 14, clang ≥ 18, or Apple clang)
 - CMake ≥ 3.20
-- libuv ≥ 1.0 (`brew install lib
-uv`)
+- libuv ≥ 1.0 (`brew install libuv`)
 - The [Wolfram SDK](https://github.com/ewanc26/wolfram) — fetched
   automatically by CMake, pinned to the released `v0.44.2` tag
 - A Bluesky account with an app password
@@ -83,10 +83,9 @@ export DAFU_VERBOSE=1                        # optional, debug output
 | `DAFU_FIREHOSE`      | no       | `wss://bsky.network` | Firehose WebSocket URL               |
 | `DAFU_FORTUNE_INTERVAL`| no     | `1800`               | Seconds between standalone fortunes  |
 | `DAFU_VERBOSE`       | no       | unset                | Set to `1` for per-event debug output|
+
+## Licence
+AGPL-3.0. See [LICENSE](LICENSE).
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the workflow and the checks required before opening a pull request.
-
-## Licence
-
-AGPL-3.0. See [LICENSE](LICENSE).
